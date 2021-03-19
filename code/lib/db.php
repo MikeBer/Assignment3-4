@@ -88,19 +88,19 @@ function update_article($dbconn, $title, $content, $aid) {
 }
 
 function authenticate_user($dbconn, $username, $password) {
-	$query=
-		"SELECT
-		authors.id as id,
-		authors.username as username,
-		authors.password as password,
-		authors.role as role
-		FROM
-		authors
-		WHERE
-		username='".$_POST['username']."'
-		AND
-		password='".$_POST['password']."'
-		LIMIT 1";
-	return run_query($dbconn, $query);
+    $query=$pdo->prepare('SELECT
+        authors.id as id,
+        authors.username as username,
+        authors.password as password,
+        authors.role as role
+        FROM
+        authors
+        WHERE
+        username=?
+        AND
+        password=?
+        LIMIT 1');
+    $query->execute([$username, $password]);
+    return run_query($dbconn, $query);
 }	
 ?>
