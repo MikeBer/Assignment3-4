@@ -11,20 +11,9 @@ if ($debug) {
 	}    
 }
 
-function run_query($dbconn, $query) {
-	if ($debug) {
-		echo "$query<br>";
-	}
-	$result = pg_query($dbconn, $query);
-	if ($result == False and $debug) {
-		echo "Query failed<br>";
-	}
-	return $result;
-}
-
 //database functions
 function get_article_list($dbconn){
-	$query= 
+	$query=
 		"SELECT 
 		articles.created_on as date,
 		articles.aid as aid,
@@ -37,11 +26,18 @@ function get_article_list($dbconn){
 		authors ON articles.author=authors.id
 		ORDER BY
 		date DESC";
-return run_query($dbconn, $query);
+    $result=pg_query($dbconn, $query);
+    if ($debug) {
+		echo "$query<br>";
+	}
+	if ($result == False and $debug) {
+		echo "Query failed<br>";
+	}
+	return $result;
 }
 
 function get_article($dbconn, $aid) {
-	$query= 
+	$statement= 
 		"SELECT 
 		articles.created_on as date,
 		articles.aid as aid,
@@ -54,41 +50,73 @@ function get_article($dbconn, $aid) {
 		INNER JOIN
 		authors ON articles.author=authors.id
 		WHERE
-		aid='".$aid."'
+		aid=$1
 		LIMIT 1";
-return run_query($dbconn, $query);
+    $result=pg_prepare($dbconn, "", $statement);
+    $result=pg_execute($dbconn, "", array($aid)); 
+    if ($debug) {
+		echo "$query<br>";
+	}
+	if ($result == False and $debug) {
+		echo "Query failed<br>";
+	}
+	return $result;
 }
 
 function delete_article($dbconn, $aid) {
-	$query= "DELETE FROM articles WHERE aid='".$aid."'";
-	return run_query($dbconn, $query);
+	$statement= "DELETE FROM articles WHERE aid=$1";
+	$result=pg_prepare($dbconn, "", $statement);
+        $result=pg_execute($dbconn, "", array($aid)); 
+        if ($debug) {
+		echo "$query<br>";
+	}
+	if ($result == False and $debug) {
+		echo "Query failed<br>";
+	}
+	return $result;
 }
 
 function add_article($dbconn, $title, $content, $author) {
 	$stub = substr($content, 0, 30);
 	$aid = str_replace(" ", "-", strtolower($title));
-	$query="
+	$statement="
 		INSERT INTO
 		articles
 		(aid, title, author, stub, content) 
 		VALUES
-		('$aid', '$title', $author, '$stub', '$content')";
-	return run_query($dbconn, $query);
+		($1, $2, $3, $4, $5)";
+	 $result=pg_prepare($dbconn,"", $statement);
+    $result=pg_execute($dbconn, "", array($aid, $title, $author, $stub, $content)); 
+    if ($debug) {
+		echo "$query<br>";
+	}
+	if ($result == False and $debug) {
+		echo "Query failed<br>";
+	}
+	return $result;
 }
 
 function update_article($dbconn, $title, $content, $aid) {
-	$query=
+	$statement=
 		"UPDATE articles
 		SET 
-		title='$title',
-		content='$content'
+		title=$1,
+		content=$2
 		WHERE
-		aid='$aid'";
-	return run_query($dbconn, $query);
+		aid=$3";
+    $result=pg_prepare($dbconn, "", $statement);
+    $result=pg_execute($dbconn, "", array($title, $content, $aid));
+	if ($debug) {
+		echo "$query<br>";
+	}
+	if ($result == False and $debug) {
+		echo "Query failed<br>";
+	}
+	return $result;
 }
 
 function authenticate_user($dbconn, $username, $password) {
-    $query=$pdo->prepare('SELECT
+    $statement='SELECT
         authors.id as id,
         authors.username as username,
         authors.password as password,
@@ -96,11 +124,18 @@ function authenticate_user($dbconn, $username, $password) {
         FROM
         authors
         WHERE
-        username=?
+        username=$1
         AND
-        password=?
-        LIMIT 1');
-    $query->execute([$username, $password]);
-    return run_query($dbconn, $query);
+        password=$2
+        LIMIT 1';
+    $result=pg_prepare($dbconn,"", $statement);
+    $result=pg_execute($dbconn, "", array($username, $password)); 
+    if ($debug) {
+		echo "$query<br>";
+	}
+	if ($result == False and $debug) {
+		echo "Query failed<br>";
+	}
+	return $result;
 }	
 ?>
